@@ -1,0 +1,65 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = "file:./dev.db"
+}
+
+model Product {
+  id          String   @id @default(uuid())
+  brand       String
+  model       String
+  price       Float
+  currency    String   @default("USD")
+  inStock     Boolean
+  retailer    String
+  url         String
+  dateAdded   DateTime @default(now())
+  lastUpdated DateTime @default(now())
+  alerts      Alert[]
+  
+  @@index([brand])
+  @@index([price])
+  @@index([inStock])
+}
+
+model Alert {
+  id             String   @id @default(uuid())
+  product        Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+  productId      String
+  priceThreshold Float
+  isActive       Boolean  @default(true)
+  createdAt      DateTime @default(now())
+  telegramChatId String?
+  
+  @@index([productId])
+  @@index([isActive])
+}
+
+model ScrapeConfig {
+  id             String    @id @default(uuid())
+  name           String    @default("Unnamed Configuration")
+  url            String?
+  html           String?
+  selectors      Json      // Will store the selector object
+  updateFrequency Int       @default(60) // minutes
+  createdAt      DateTime  @default(now())
+  lastRun        DateTime?
+  isActive       Boolean   @default(true)
+  
+  @@index([isActive])
+}
+
+model TelegramConfig {
+  id        String   @id @default(uuid())
+  botToken  String
+  chatId    String?
+  isEnabled Boolean  @default(false)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
