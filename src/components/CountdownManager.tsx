@@ -1,16 +1,7 @@
 'use client';
 
 import { useEffect } from 'react';
-
-interface ScheduledTask {
-  id: string;
-  retailer: string;
-  sourceUrl: string;
-  divSelector: string;
-  updateFrequency: number;
-  lastRun?: string;
-  isActive: boolean;
-}
+import { ScheduledScrapeTask, TaskExecution } from '@/types';
 
 export default function CountdownManager() {
   useEffect(() => {
@@ -21,7 +12,7 @@ export default function CountdownManager() {
         const savedTasksStr = localStorage.getItem('scheduledScrapeTasks');
         if (!savedTasksStr) return;
         
-        const tasks: ScheduledTask[] = JSON.parse(savedTasksStr);
+        const tasks: ScheduledScrapeTask[] = JSON.parse(savedTasksStr);
         const now = new Date();
         let tasksUpdated = false;
         
@@ -59,9 +50,10 @@ export default function CountdownManager() {
   }, []);
   
   // Function to execute a task
-  async function executeTask(task: ScheduledTask) {
+  async function executeTask(task: ScheduledScrapeTask) {
     console.log(`Executing task for ${task.retailer}`);
     try {
+      const startTime = Date.now();
       const response = await fetch('/api/extract-div', {
         method: 'POST',
         headers: {
@@ -74,16 +66,54 @@ export default function CountdownManager() {
         }),
       });
       
-      if (!response.ok) {
-        throw new Error(`Failed to run task: ${response.statusText}`);
+      const result = await response.json();
+      const endTime = Date.now();
+      const duration = endTime - startTime;
+      
+      // Create execution record
+      const execution: TaskExecution = {
+        timestamp: new Date().toISOString(),
+        success: response.ok,
+        productsFound: result.products?.length || 0,
+        errorMessage: response.ok ? undefined : (result.error || 'Unknown error'),
+        duration
+      };
+      
+      // Add to task's execution history
+      if (!task.executions) task.executions = [];
+      task.executions.unshift(execution);
+      
+      // Limit history size
+      if (task.executions.length > 10) {
+        task.executions = task.executions.slice(0, 10);
       }
       
       // Update the last run time
       task.lastRun = new Date().toISOString();
-      console.log(`Task for ${task.retailer} completed successfully`);
+      
+      // Dispatch event to notify UI components
+      window.dispatchEvent(new CustomEvent('taskExecutionCompleted', { 
+        detail: { taskId: task.id } 
+      }));
       
     } catch (error) {
       console.error(`Error executing task for ${task.retailer}:`, error);
+      
+      // Record the failure
+      const execution: TaskExecution = {
+        timestamp: new Date().toISOString(),
+        success: false,
+        productsFound: 0,
+        errorMessage: error instanceof Error ? error.message : 'Unknown error',
+        duration: 0
+      };
+      
+      // Add to task's execution history
+      if (!task.executions) task.executions = [];
+      task.executions.unshift(execution);
+      
+      // Update the last run time despite error
+      task.lastRun = new Date().toISOString();
     }
   }
   

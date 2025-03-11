@@ -40,3 +40,33 @@ export interface ScrapeConfigData {
   lastRun?: Date;
   createdAt?: Date;
 }
+
+// Enhanced scheduled task with execution history
+export interface ScheduledScrapeTask {
+  id: string;
+  retailer: string;
+  sourceUrl: string;
+  divSelector: string;
+  updateFrequency: number; // in minutes
+  lastRun?: string;
+  isActive: boolean;
+  priority: number; // 1-10, higher number = higher priority
+  executions: TaskExecution[];
+}
+
+// Task execution record
+export interface TaskExecution {
+  timestamp: string;
+  success: boolean;
+  productsFound: number;
+  errorMessage?: string;
+  duration: number; // milliseconds
+}
+
+// Task run queue item
+export interface QueuedTask {
+  taskId: string;
+  retailer: string;
+  scheduledTime: Date;
+  priority: number;
+}

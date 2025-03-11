@@ -1,15 +1,10 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { ScheduledScrapeTask } from '@/types';
 
 interface CountdownProps {
-  tasks: Array<{
-    id: string;
-    retailer: string;  // Added retailer name for better display
-    updateFrequency: number;
-    lastRun?: string;
-    isActive: boolean;
-  }>;
+  tasks: ScheduledScrapeTask[];
 }
 
 export default function NextScanCountdown({ tasks }: CountdownProps) {
@@ -29,22 +24,26 @@ export default function NextScanCountdown({ tasks }: CountdownProps) {
       }
       
       let nextScanTime: Date | null = null;
-      let nextTask: any = null;
+      let taskWithNextRun: ScheduledScrapeTask | null = null;
       
       // Calculate next run time for each task
-      activeTasks.forEach(task => {
+      for (const task of activeTasks) {
         if (task.lastRun) {
-          const lastRun = new Date(task.lastRun);
-          const nextRun = new Date(lastRun.getTime() + (task.updateFrequency * 60 * 1000));
-          
-          if (!nextScanTime || nextRun < nextScanTime) {
-            nextScanTime = nextRun;
-            nextTask = task;
+          try {
+            const lastRun = new Date(task.lastRun);
+            const nextRun = new Date(lastRun.getTime() + (task.updateFrequency * 60 * 1000));
+            
+            if (!nextScanTime || nextRun < nextScanTime) {
+              nextScanTime = nextRun;
+              taskWithNextRun = task;
+            }
+          } catch (err) {
+            console.error("Error calculating next run time:", err);
           }
         }
-      });
+      }
       
-      if (!nextScanTime || !nextTask) {
+      if (!nextScanTime || !taskWithNextRun) {
         setTimeLeft('Will run soon');
         setNextTaskInfo(null);
         return;
@@ -56,7 +55,7 @@ export default function NextScanCountdown({ tasks }: CountdownProps) {
       
       // Set next task info
       setNextTaskInfo({
-        retailer: nextTask.retailer,
+        retailer: taskWithNextRun.retailer,
         time: nextScanTime
       });
       

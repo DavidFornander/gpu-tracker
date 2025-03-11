@@ -194,9 +194,10 @@ export function extractVisibleText(html: string): string {
   // Extract text from the body
   let text = '';
   
-  // Process all text nodes - fixing the Element type issue
-  const processNode = (_: number, elem: cheerio.Element | any) => {
-    if (elem.type === 'text') {
+  // Process all text nodes - Use proper type handling
+  const processNode = (_: number, elem: any) => {
+    // Type checking inside the function instead of in the parameter
+    if (elem && elem.type === 'text') {
       // Add the text content with proper spacing
       const trimmedText = $(elem).text().trim();
       if (trimmedText) {
@@ -205,11 +206,14 @@ export function extractVisibleText(html: string): string {
     }
     
     // Process child elements
-    $(elem).contents().each(processNode);
-    
-    // Add line breaks after certain block elements
-    if (['br', 'p', 'div', 'li', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'tr'].includes(elem.tagName)) {
-      text += '\n';
+    if (elem) { // Add null check here
+      $(elem).contents().each(processNode);
+      
+      // Add line breaks after certain block elements
+      // Make sure elem and elem.tagName exist before checking
+      if (elem.tagName && ['br', 'p', 'div', 'li', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'tr'].includes(elem.tagName)) {
+        text += '\n';
+      }
     }
   };
   

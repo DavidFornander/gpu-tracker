@@ -3,27 +3,25 @@
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import NextScanCountdown from '@/components/NextScanCountdown';
-
-// Define the task type
-interface ScheduledTask {
-  id: string;
-  retailer: string;
-  sourceUrl: string;
-  divSelector: string;
-  updateFrequency: number;
-  lastRun?: string;
-  isActive: boolean;
-}
+import { ScheduledScrapeTask } from '@/types'; // Import the correct type from types file
 
 export default function Home() {
-  const [scheduledTasks, setScheduledTasks] = useState<ScheduledTask[]>([]);
+  // Update type to match the expected interface with priority and executions
+  const [scheduledTasks, setScheduledTasks] = useState<ScheduledScrapeTask[]>([]);
   
   // Load scheduled tasks from localStorage
   useEffect(() => {
     try {
       const savedTasks = localStorage.getItem('scheduledScrapeTasks');
       if (savedTasks) {
-        setScheduledTasks(JSON.parse(savedTasks));
+        const tasks = JSON.parse(savedTasks);
+        // Ensure all tasks have the required fields for ScheduledScrapeTask
+        const enhancedTasks = tasks.map((task: any) => ({
+          ...task,
+          priority: task.priority || 5, // Default priority if missing
+          executions: task.executions || [] // Default empty executions array if missing
+        }));
+        setScheduledTasks(enhancedTasks);
       }
     } catch (err) {
       console.error('Error loading tasks:', err);
