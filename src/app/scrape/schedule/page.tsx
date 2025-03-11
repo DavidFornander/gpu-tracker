@@ -2,6 +2,7 @@
 
 import { useState, FormEvent, useEffect } from 'react';
 import Link from 'next/link';
+import NextScanCountdown from '@/components/NextScanCountdown';
 
 // Define the type for a scheduled scrape task
 interface ScheduledScrapeTask {
@@ -156,6 +157,9 @@ export default function ScheduleScrapePage() {
     <div className="w-full">
       <h1 className="text-2xl font-bold mb-6">Schedule Regular Scraping Tasks</h1>
       
+      {/* Add countdown component at the top */}
+      <NextScanCountdown tasks={scheduledTasks} />
+      
       {error && (
         <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded mb-6">
           {error}
@@ -225,14 +229,14 @@ export default function ScheduleScrapePage() {
             <input
               type="number"
               id="updateFrequency"
-              min="15"
+              min="2" // Changed from 15 to 2 minutes
               className="w-full border rounded-md px-4 py-2"
               required
               value={formData.updateFrequency}
               onChange={(e) => handleInputChange('updateFrequency', parseInt(e.target.value))}
             />
             <p className="mt-1 text-xs text-gray-500">
-              How often should this task run? Minimum 15 minutes.
+              How often should this task run? Minimum 2 minutes.  {/* Updated text to match */}
             </p>
           </div>
           

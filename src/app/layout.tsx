@@ -2,6 +2,7 @@ import './globals.css';
 import type { Metadata } from 'next';
 import { Inter } from 'next/font/google';
 import Navbar from '@/components/Navbar';
+import CountdownManager from '@/components/CountdownManager';
 
 const inter = Inter({ subsets: ['latin'] });
 
@@ -19,8 +20,10 @@ export default function RootLayout({
     <html lang="en">
       <body className={inter.className}>
         <Navbar />
-        {/* Slightly increased side padding with responsive steps */}
+        {/* Make container full width with max constraint and better padding */}
         <main className="w-full max-w-[1920px] mx-auto px-5 md:px-8 lg:px-12 py-8">
+          {/* Add the background countdown manager */}
+          <CountdownManager />
           {children}
         </main>
         <footer className="bg-gray-100 mt-12 py-6 px-4">

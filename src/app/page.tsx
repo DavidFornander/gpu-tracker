@@ -1,73 +1,72 @@
+'use client';
+
+import { useState, useEffect } from 'react';
 import Link from 'next/link';
+import NextScanCountdown from '@/components/NextScanCountdown';
+
+// Define the task type
+interface ScheduledTask {
+  id: string;
+  retailer: string;
+  sourceUrl: string;
+  divSelector: string;
+  updateFrequency: number;
+  lastRun?: string;
+  isActive: boolean;
+}
 
 export default function Home() {
+  const [scheduledTasks, setScheduledTasks] = useState<ScheduledTask[]>([]);
+  
+  // Load scheduled tasks from localStorage
+  useEffect(() => {
+    try {
+      const savedTasks = localStorage.getItem('scheduledScrapeTasks');
+      if (savedTasks) {
+        setScheduledTasks(JSON.parse(savedTasks));
+      }
+    } catch (err) {
+      console.error('Error loading tasks:', err);
+    }
+  }, []);
+
   return (
-    <div className="space-y-6">
-      <section className="bg-white p-6 rounded-lg shadow-md">
-        <h1 className="text-2xl font-bold mb-4">GPU Tracker Dashboard</h1>
-        <p className="text-gray-600">
-          Track GPU prices and availability across multiple retailers.
-        </p>
-      </section>
+    <div className="w-full">
+      <h1 className="text-3xl font-bold mb-8">GPU Price Tracker</h1>
       
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        <div className="bg-white p-6 rounded-lg shadow-md">
-          <h2 className="text-xl font-semibold mb-4">Add New GPU Source</h2>
-          <div className="space-y-4">
-            <div>
-              <h3 className="font-medium mb-2">URL Scraping</h3>
-              <p className="text-sm text-gray-500 mb-2">
-                Add a retailer URL with pre-set filters for in-stock items.
-              </p>
-              <Link 
-                href="/scrape/url" 
-                className="inline-block bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded"
-              >
-                Add URL Source
-              </Link>
-            </div>
-            
-            <div className="border-t pt-4">
-              <h3 className="font-medium mb-2">HTML Snippet</h3>
-              <p className="text-sm text-gray-500 mb-2">
-                Paste HTML snippet containing GPU products.
-              </p>
-              <Link 
-                href="/scrape/html" 
-                className="inline-block bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded"
-              >
-                Add HTML Source
-              </Link>
-            </div>
-          </div>
-        </div>
+      {/* Only show countdown if there are active tasks */}
+      {scheduledTasks.length > 0 && scheduledTasks.some(task => task.isActive) && (
+        <NextScanCountdown tasks={scheduledTasks} />
+      )}
+      
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+        <Link href="/products" 
+          className="bg-white hover:bg-gray-50 border border-gray-200 p-6 rounded-lg shadow-sm flex flex-col items-center justify-center text-center transition-all">
+          <div className="text-4xl mb-4">📊</div>
+          <h2 className="text-xl font-bold mb-2">View Products</h2>
+          <p className="text-gray-600">See all tracked GPUs and their current prices</p>
+        </Link>
         
-        <div className="bg-white p-6 rounded-lg shadow-md">
-          <h2 className="text-xl font-semibold mb-4">Quick Access</h2>
-          <div className="space-y-4">
-            <Link 
-              href="/products" 
-              className="flex items-center justify-between p-3 border rounded hover:bg-gray-50"
-            >
-              <span className="font-medium">View All GPUs</span>
-              <span className="text-blue-500">→</span>
-            </Link>
-            <Link 
-              href="/alerts" 
-              className="flex items-center justify-between p-3 border rounded hover:bg-gray-50"
-            >
-              <span className="font-medium">Manage Alerts</span>
-              <span className="text-blue-500">→</span>
-            </Link>
-            <Link 
-              href="/settings" 
-              className="flex items-center justify-between p-3 border rounded hover:bg-gray-50"
-            >
-              <span className="font-medium">Settings</span>
-              <span className="text-blue-500">→</span>
-            </Link>
-          </div>
-        </div>
+        <Link href="/scrape/html" 
+          className="bg-white hover:bg-gray-50 border border-gray-200 p-6 rounded-lg shadow-sm flex flex-col items-center justify-center text-center transition-all">
+          <div className="text-4xl mb-4">🔍</div>
+          <h2 className="text-xl font-bold mb-2">Manual Scrape</h2>
+          <p className="text-gray-600">Extract products from a website right now</p>
+        </Link>
+        
+        <Link href="/scrape/schedule" 
+          className="bg-white hover:bg-gray-50 border border-gray-200 p-6 rounded-lg shadow-sm flex flex-col items-center justify-center text-center transition-all">
+          <div className="text-4xl mb-4">⏰</div>
+          <h2 className="text-xl font-bold mb-2">Scheduled Scrapes</h2>
+          <p className="text-gray-600">Set up automatic tracking of GPU prices</p>
+        </Link>
+        
+        <Link href="/settings" 
+          className="bg-white hover:bg-gray-50 border border-gray-200 p-6 rounded-lg shadow-sm flex flex-col items-center justify-center text-center transition-all">
+          <div className="text-4xl mb-4">⚙️</div>
+          <h2 className="text-xl font-bold mb-2">Settings</h2>
+          <p className="text-gray-600">Configure application settings</p>
+        </Link>
       </div>
     </div>
   );
