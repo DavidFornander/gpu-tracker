@@ -239,36 +239,117 @@ export async function parseHtmlSnippet(
   console.log("\n🔍 ===================================");
   console.log("🔍 [DEBUG] STARTING HTML PARSING");
   console.log("🔍 ===================================\n");
-  console.log("[Debug] Starting parseHtmlSnippet with provided HTML."); // log start of parsing
+  
   try {
     const $ = cheerio.load(html);
     const products: ProductData[] = [];
     const errors: string[] = [];
 
-    // Find all product containers and capture their inner HTML
-    const items = $(selectors.itemContainer);
-    const productElements = items.toArray();
-    const rawDivs = productElements.map(element => $(element).html() || "");
+    // Find the main container
+    const containerElement = $(selectors.itemContainer);
+    
+    if (containerElement.length === 0) {
+      console.log(`\n❌ [ERROR] Main container selector not found: ${selectors.itemContainer}`);
+      return { 
+        products: [],
+        errors: [`No container found matching selector: ${selectors.itemContainer}`],
+        rawDivs: []
+      };
+    }
+    
+    console.log(`\n🔍 [DEBUG] Found main container. Looking for product divs...`);
+    
+    // FIXED: Instead of looking for children, look for direct child items of the container
+    // that match common product patterns or have specific characteristics
+    
+    // Start with direct children that look like product items (more likely to be complete products)
+    let productElements = containerElement.children('.product-item, .product-card, .product, [data-product], [class*="product"]').toArray();
+    
+    // If no product items found, try direct children that are likely to be products based on content
+    if (productElements.length === 0) {
+      // Look for direct children with these characteristics
+      productElements = containerElement.children().filter(function() {
+        const $this = $(this);
+        const hasPrice = $this.find('*:contains("kr"), *:contains(":-"), .price, [class*="price"]').length > 0;
+        const hasModelName = $this.text().match(/(RTX|RX|GTX|AMD|NVIDIA)/i) !== null;
+        const hasImage = $this.find('img').length > 0;
+        const isSubstantial = $this.text().trim().length > 100; // Product divs usually have substantial content
+        
+        // Product elements typically have price + (model name or image)
+        return (hasPrice && (hasModelName || hasImage)) || isSubstantial;
+      }).toArray();
+    }
+    
+    // If still nothing, just get the closest elements that look like product cards
+    if (productElements.length === 0) {
+      console.log(`\n⚠️ [WARN] No product items detected using standard patterns. Using container's direct children.`);
+      // Get direct children that have a minimum structure
+      productElements = containerElement.children('div').filter(function() {
+        return $(this).children().length > 2; // Most product cards have several child elements
+      }).toArray();
+    }
 
     console.log(`\n🔢 [DEBUG] FOUND ${productElements.length} PRODUCT ELEMENTS`);
-    console.log(`[Debug] Found ${productElements.length} product elements.`);
+    
+    // If we still can't find distinct product elements, the selector might be too deep already
+    if (productElements.length === 0) {
+      console.log(`\n⚠️ [WARN] Selector may be too specific. Trying parent container...`);
+      
+      // Try going up one level in the DOM
+      const parentContainer = $(selectors.itemContainer).parent();
+      productElements = parentContainer.children('div').filter(function() {
+        const $this = $(this);
+        return $this.find('.price, img, [class*="product"]').length > 0;
+      }).toArray();
+      
+      // If we found products at the parent level, log the better selector for future use
+      if (productElements.length > 0) {
+        console.log(`\n💡 [TIP] Better selector might be: "${parentContainer.prop('tagName').toLowerCase()}${parentContainer.attr('class') ? '.' + parentContainer.attr('class').replace(/\s+/g, '.') : ''} > div"`);
+      }
+    }
+
+    const rawDivs = productElements.map(element => $(element).html() || "");
 
     if (productElements.length === 0) {
       return { 
         products: [],
-        errors: [`No items found matching selector: ${selectors.itemContainer}`],
+        errors: [`No product items found within container: ${selectors.itemContainer}`],
         rawDivs: []
       };
     }
+    
+    // Log the first product element to help with debugging
+    console.log(`\n📄 [DEBUG] First product element structure (truncated):`);
+    if (productElements.length > 0) {
+      const firstElement = $(productElements[0]);
+      console.log(`Tag: ${firstElement.prop('tagName')}, Classes: ${firstElement.attr('class') || 'none'}`);
+      console.log(`Children elements: ${firstElement.children().length}`);
+      const firstElementHtml = firstElement.html() || "";
+      console.log(firstElementHtml.slice(0, 300) + '...');
+    }
 
-    // Use async iteration with AI extraction for each product div
+    // Process each product element
     for (const element of productElements) {
       try {
         const htmlFragment = $(element).html() || "";
+        
+        // QUALITY CHECK: Skip if the fragment is too small to be a complete product
+        if (htmlFragment.length < 100) {
+          console.log("\n⚠️ [WARN] Skipping small HTML fragment, likely not a complete product");
+          continue;
+        }
+        
         console.log("\n🔄 [DEBUG] PROCESSING PRODUCT ELEMENT");
-        console.log("[Debug] Processing one product element...");
         const product = await aiExtractData(htmlFragment, selectors, retailer, sourceUrl || '');
-        products.push(product);
+        
+        // Only add products that have meaningful data
+        if ((product.brand !== "Unknown" && product.brand !== "") || 
+            (product.model !== "Unknown" && product.model !== "") || 
+            product.price > 0) {
+          products.push(product);
+        } else {
+          console.log("\n⚠️ [WARN] Skipping product with insufficient data");
+        }
       } catch (err) {
         errors.push(`Error parsing item: ${err instanceof Error ? err.message : String(err)}`);
       }
@@ -277,7 +358,7 @@ export async function parseHtmlSnippet(
     console.log("\n✨ ===================================");
     console.log(`✨ [DEBUG] FINISHED PROCESSING: ${products.length} PRODUCTS`);
     console.log("✨ ===================================\n");
-    console.log(`[Debug] Finished processing. Extracted ${products.length} products.`);
+    
     return {
       products,
       errors: errors.length > 0 ? errors : undefined,
@@ -288,7 +369,7 @@ export async function parseHtmlSnippet(
     console.log("💥 [ERROR] PROBLEM IN parseHtmlSnippet");
     console.log("💥 ===================================");
     console.log(err);
-    console.log("[Error] Problem in parseHtmlSnippet:", err);
+    
     return {
       products: [],
       errors: [`Failed to parse HTML: ${err instanceof Error ? err.message : String(err)}`]
