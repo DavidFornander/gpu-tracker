@@ -152,7 +152,8 @@ export default function ScheduleScrapePage() {
   };
 
   return (
-    <div className="max-w-6xl mx-auto">
+    // Update to full width with no max-width constraint
+    <div className="w-full">
       <h1 className="text-2xl font-bold mb-6">Schedule Regular Scraping Tasks</h1>
       
       {error && (
@@ -254,37 +255,43 @@ export default function ScheduleScrapePage() {
       </div>
       
       {scheduledTasks.length > 0 && (
-        <div className="bg-white p-6 rounded-lg shadow-md">
+        <div className="bg-white p-6 rounded-lg shadow-md overflow-hidden">
           <h2 className="text-lg font-medium mb-4">Scheduled Tasks</h2>
           
-          <div className="overflow-x-auto">
-            <table className="min-w-full divide-y divide-gray-200">
+          {/* Fix table overflow with proper container settings */}
+          <div className="w-full overflow-x-auto">
+            <table className="min-w-full table-auto">
               <thead className="bg-gray-50">
                 <tr>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Retailer</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">URL</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Frequency</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Last Run</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+                  {/* Make Retailer column narrower */}
+                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-[15%]">Retailer</th>
+                  {/* Allow URL column to wrap text */}
+                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-[30%]">URL</th>
+                  {/* Make frequency column narrower */}
+                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-[10%]">Frequency</th>
+                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-[15%]">Last Run</th>
+                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-[10%]">Status</th>
+                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-[20%]">Actions</th>
                 </tr>
               </thead>
               <tbody className="bg-white divide-y divide-gray-200">
                 {scheduledTasks.map((task) => (
                   <tr key={task.id}>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">{task.retailer}</td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 max-w-xs truncate">{task.sourceUrl}</td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{task.updateFrequency} min</td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                    <td className="px-4 py-3 text-sm font-medium text-gray-900">{task.retailer}</td>
+                    {/* Allow URL text to wrap */}
+                    <td className="px-4 py-3 text-sm text-gray-500 break-all">{task.sourceUrl}</td>
+                    <td className="px-4 py-3 text-sm text-gray-500">{task.updateFrequency} min</td>
+                    <td className="px-4 py-3 text-sm text-gray-500">
                       {task.lastRun ? new Date(task.lastRun).toLocaleString() : 'Never'}
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
+                    <td className="px-4 py-3">
                       <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${task.isActive ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-800'}`}>
                         {task.isActive ? 'Active' : 'Paused'}
                       </span>
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                      <div className="flex space-x-2">
+                    <td className="px-4 py-3 text-sm font-medium">
+                      {/* Adjust button layout to fit better */}
+                      <div className="flex flex-wrap gap-2">
                         <button
                           onClick={() => handleToggleTaskStatus(task.id)}
                           className={`${task.isActive ? 'bg-yellow-500 hover:bg-yellow-600' : 'bg-green-500 hover:bg-green-600'} text-white px-3 py-1 rounded-md text-sm`}

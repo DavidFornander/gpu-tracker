@@ -19,7 +19,8 @@ export default function RootLayout({
     <html lang="en">
       <body className={inter.className}>
         <Navbar />
-        <main className="container mx-auto px-4 py-8">
+        {/* Slightly increased side padding with responsive steps */}
+        <main className="w-full max-w-[1920px] mx-auto px-5 md:px-8 lg:px-12 py-8">
           {children}
         </main>
         <footer className="bg-gray-100 mt-12 py-6 px-4">

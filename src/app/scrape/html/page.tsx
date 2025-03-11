@@ -83,7 +83,8 @@ export default function ScrapeHtmlPage() {
   };
 
   return (
-    <div className="max-w-3xl mx-auto">
+    // Update to full width with no max-width constraint
+    <div className="w-full">
       <h1 className="text-2xl font-bold mb-6">Scrape Website for Products</h1>
       
       {error && (
@@ -170,8 +171,9 @@ export default function ScrapeHtmlPage() {
           </div>
         </form>
         {trialResponse && (
-          <div className="mt-4 p-4 bg-gray-100 border rounded">
-            <pre>{trialResponse}</pre>
+          // Improve response container width and overflow handling
+          <div className="mt-4 p-4 bg-gray-100 border rounded max-h-[600px] overflow-y-auto overflow-x-auto">
+            <pre className="whitespace-pre-wrap break-words">{trialResponse}</pre>
           </div>
         )}
       </div>

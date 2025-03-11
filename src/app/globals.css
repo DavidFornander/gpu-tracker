@@ -35,3 +35,26 @@ button {
   background-color: var(--button-bg);
   color: var(--button-text);
 }
+
+/* Add responsive table support */
+table {
+  width: 100%;
+  table-layout: auto;
+}
+
+/* Make sure pre tags don't cause horizontal scrolling */
+pre {
+  white-space: pre-wrap;
+  word-wrap: break-word;
+}
+
+/* Ensure no fixed width elements cause overflow */
+img, svg, video {
+  max-width: 100%;
+  height: auto;
+}
+
+/* Ensure overflow is properly handled */
+.overflow-auto {
+  overflow: auto;
+}
