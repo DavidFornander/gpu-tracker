@@ -179,9 +179,17 @@ export default function ScheduleScrapePage() {
     }
   };
 
+  // Update the handleShowHistory function to toggle the modal
   const handleShowHistory = (task: ScheduledScrapeTask) => {
-    setSelectedTask(task);
-    setIsHistoryModalOpen(true);
+    // If the selected task is the same as the one being clicked, toggle the modal
+    if (selectedTask && selectedTask.id === task.id && isHistoryModalOpen) {
+      setIsHistoryModalOpen(false);
+      setSelectedTask(null);
+    } else {
+      // Otherwise, open the modal with the new task
+      setSelectedTask(task);
+      setIsHistoryModalOpen(true);
+    }
   };
 
   const handleCloseHistoryModal = () => {
@@ -372,8 +380,8 @@ export default function ScheduleScrapePage() {
                         {task.executions && task.executions.length > 0 && (
                           <button 
                             onClick={() => handleShowHistory(task)}
-                            className="ml-2 text-blue-600 hover:text-blue-800"
-                            title="View execution history"
+                            className={`ml-2 ${selectedTask?.id === task.id && isHistoryModalOpen ? 'text-blue-800 bg-blue-100 rounded-full' : 'text-blue-600 hover:text-blue-800'}`}
+                            title={selectedTask?.id === task.id && isHistoryModalOpen ? "Hide execution history" : "View execution history"}
                           >
                             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
                               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
