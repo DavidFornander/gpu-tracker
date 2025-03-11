@@ -23,7 +23,6 @@ async function callOllama(prompt: string): Promise<string> {
         body: JSON.stringify({
             model: "mistral",  // model name
             prompt: prompt,
-            format: "json",     // enforce JSON output
             stream: false       // disable streaming
         })
     });
@@ -125,32 +124,14 @@ ${visibleText}`;
     }
     console.log(`\n[AI] PRICE EXTRACTION RESULT: ${price}`);
     
-    // 4. Extract STOCK STATUS only - using only visible text
-    const stockPrompt = `You are a specialized product availability detector.
-TASK: Determine if the product is in stock from the text.
-INSTRUCTIONS:
-- Return ONLY "true" if in stock or "false" if out of stock, nothing else
-- Look for indicators like:
-  - IN STOCK: "Add to cart", "Buy now", "In stock", "Available", "Lägg i kundvagn"
-  - OUT OF STOCK: "Out of stock", "Sold out", "Unavailable", "Notify me"
-- If you cannot determine stock status, return "true" as default
-
-TEXT FROM PRODUCT:
-${visibleText}`;
-
-    const stockResponse = await callOllama(stockPrompt);
-    // Parse stock status (accepts true/false as text)
-    const inStock = stockResponse.trim().toLowerCase() === 'true';
-    console.log(`\n[AI] STOCK STATUS EXTRACTION RESULT: ${inStock}`);
-    
     // Compile final product data
     const productData = {
       id: uuidv4(),
       brand: brand || "Unknown",
       model: model || "Unknown",
       price: price,
-      currency: 'USD',
-      inStock: inStock,
+      currency: 'SEK',
+      inStock: true,  // Hardcoded to true
       retailer,
       url: sourceUrl || '',
       dateAdded: new Date(),
@@ -179,15 +160,13 @@ ${visibleText}`;
     const fallbackModel = $(selectors.model).text().trim() || "Unknown";
     const priceMatch = $(selectors.price).text().trim().match(/[\d,.]+/);
     const fallbackPrice = priceMatch ? parseFloat(priceMatch[0].replace(/,/g, '')) : 0;
-    const stockText = $(selectors.stockStatus).text().trim().toLowerCase();
-    const fallbackInStock = !(stockText.includes('out of stock') || stockText.includes('sold out') || stockText.includes('unavailable'));
     const fallbackData = {
       id: uuidv4(),
       brand: fallbackBrand,
       model: fallbackModel,
       price: fallbackPrice,
-      currency: 'USD',
-      inStock: fallbackInStock,
+      currency: 'SEK',
+      inStock: true,  // Hardcoded to true
       retailer,
       url: sourceUrl || '',
       dateAdded: new Date(),
@@ -215,8 +194,8 @@ export function extractVisibleText(html: string): string {
   // Extract text from the body
   let text = '';
   
-  // Process all text nodes
-  const processNode = (i: number, elem: cheerio.Element) => {
+  // Process all text nodes - fixing the Element type issue
+  const processNode = (_: number, elem: cheerio.Element | any) => {
     if (elem.type === 'text') {
       // Add the text content with proper spacing
       const trimmedText = $(elem).text().trim();

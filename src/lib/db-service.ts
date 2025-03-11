@@ -70,8 +70,8 @@ export async function createScrapeConfig(data: ScrapeConfigData) {
       name: data.name || "Unnamed Configuration",
       url: data.url,
       html: data.html,
-      // Cast through unknown to avoid type errors
-      selectors: selectorJson as any,
+      // Fix the type casting
+      selectors: selectorJson as Prisma.InputJsonValue,
       updateFrequency: data.updateFrequency || 60,
       isActive: data.isActive ?? true,
     },
