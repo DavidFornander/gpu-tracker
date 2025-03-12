@@ -101,9 +101,10 @@ ${visibleText}`;
     const pricePrompt = `You are a specialized price extractor.
 TASK: Extract ONLY the numeric price value from the text.
 INSTRUCTIONS:
-- Return ONLY the number as plain text, no currency symbols, no formatting, no JSON
-- Example: If you see "€1,299.99" or "1 299,99 kr", just return "1299.99"
-- Remove all non-numeric characters except decimal point
+- Return ONLY the number as plain text, no currency symbols, no formatting
+- For prices with spaces (e.g. "8 499:-"), combine all digits (8499)
+- Always include ALL digits - prices below 1000 for GPUs are suspicious
+- If you see price like "8 499 kr" or "8 499:-", return "8499" not just "499"
 - If multiple prices appear, extract the main product price
 - If no price is found, return "0"
 
@@ -118,6 +119,11 @@ ${visibleText}`;
       const cleanPrice = priceResponse.trim().replace(/[^0-9.]/g, '');
       price = parseFloat(cleanPrice);
       if (isNaN(price)) price = 0;
+      
+      // Validate: GPU prices below 1000 are suspicious - might be missing leading digits
+      if (price > 0 && price < 1000) {
+        console.log("[AI] WARNING: Extracted price seems suspiciously low for a GPU: " + price);
+      }
     } catch (err) {
       console.log("[AI] Price parsing error:", err);
       price = 0;
