@@ -2,6 +2,7 @@
 
 import { useEffect } from 'react';
 import { ScheduledScrapeTask, TaskExecution } from '@/types';
+import { createProduct } from '@/lib/db-service'; // Import database service
 
 export default function CountdownManager() {
   useEffect(() => {
@@ -90,6 +91,13 @@ export default function CountdownManager() {
       
       // Update the last run time
       task.lastRun = new Date().toISOString();
+      
+      // Store products in the database
+      if (result.products && result.products.length > 0) {
+        for (const product of result.products) {
+          await createProduct(product);
+        }
+      }
       
       // Dispatch event to notify UI components
       window.dispatchEvent(new CustomEvent('taskExecutionCompleted', { 

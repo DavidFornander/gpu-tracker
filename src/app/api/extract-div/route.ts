@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { parseHtmlSnippet } from '@/lib/html-parser';
-import { scrapeUrl } from '@/lib/url-scraper'; // new import
+import { scrapeUrl } from '@/lib/url-scraper';
+import { createProduct } from '@/lib/db-service'; // Import database service
 
 // Update input interface: html is optional, and add divSelector
 interface ExtractDivRequest {
@@ -47,6 +48,23 @@ export async function POST(request: NextRequest) {
       result = await scrapeUrl(sourceUrl, autoSelectors, retailer);
     }
     
+    // Store products in the database
+    const savedProducts = [];
+    if (result.products.length > 0) {
+      // Save each product to the database
+      for (const product of result.products) {
+        try {
+          const savedProduct = await createProduct(product);
+          savedProducts.push(savedProduct);
+        } catch (dbError) {
+          console.error('Error saving product to database:', dbError);
+          // Continue with other products even if one fails
+        }
+      }
+      
+      console.log(`Saved ${savedProducts.length} of ${result.products.length} products to database`);
+    }
+    
     if (result.products.length === 0) {
       return NextResponse.json(
         { message: 'No products found', errors: result.errors },
@@ -55,8 +73,9 @@ export async function POST(request: NextRequest) {
     }
     
     return NextResponse.json({
-      message: `Successfully parsed ${result.products.length} products`,
+      message: `Successfully parsed and saved ${savedProducts.length} products`,
       products: result.products,
+      savedToDb: savedProducts.length,
       warnings: result.errors,
       // Use a type guard to return rawDivs if available, otherwise an empty array
       rawDivData: 'rawDivs' in result ? result.rawDivs : [],
