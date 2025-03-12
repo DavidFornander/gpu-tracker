@@ -103,7 +103,7 @@ TASK: Extract ONLY the numeric price value from the text.
 INSTRUCTIONS:
 - Return ONLY the number as plain text, no currency symbols, no formatting
 - For prices with spaces (e.g. "8 499:-"), combine all digits (8499)
-- Always include ALL digits - prices below 1000 for GPUs are suspicious
+- Always include ALL digits - prices below 1000 for GPUs are wrong, look again for leading digits
 - If you see price like "8 499 kr" or "8 499:-", return "8499" not just "499"
 - If multiple prices appear, extract the main product price
 - If no price is found, return "0"
@@ -122,7 +122,8 @@ ${visibleText}`;
       
       // Validate: GPU prices below 1000 are suspicious - might be missing leading digits
       if (price > 0 && price < 1000) {
-        console.log("[AI] WARNING: Extracted price seems suspiciously low for a GPU: " + price);
+        console.log("[AI] WARNING: Extracted price seems suspiciously low for a GPU: " + price + " Setting to 0.");
+        price = 0;
       }
     } catch (err) {
       console.log("[AI] Price parsing error:", err);
