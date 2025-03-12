@@ -70,3 +70,22 @@ export interface QueuedTask {
   scheduledTime: Date;
   priority: number;
 }
+
+// Notification rule interface
+export interface NotificationRule {
+  id: string;
+  name: string;
+  conditions: NotificationConditions;
+  isActive: boolean;
+  createdAt?: Date;
+  lastTriggered?: Date;
+}
+
+export interface NotificationConditions {
+  brandMatches?: string[];
+  modelContains?: string[];
+  minPrice?: number;
+  maxPrice?: number;
+  mustBeInStock?: boolean;
+  retailerIs?: string[];
+}

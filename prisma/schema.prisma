@@ -63,3 +63,14 @@ model TelegramConfig {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 }
+
+model NotificationRule {
+  id           String   @id @default(uuid())
+  name         String
+  conditions   Json     // Stores the notification conditions
+  isActive     Boolean  @default(true)
+  createdAt    DateTime @default(now())
+  lastTriggered DateTime?
+  
+  @@index([isActive])
+}

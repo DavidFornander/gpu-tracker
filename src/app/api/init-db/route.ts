@@ -1,13 +1,15 @@
-import { NextRequest, NextResponse } from 'next/server';
+import { NextResponse } from 'next/server';
 import fs from 'fs';
 import path from 'path';
 import { exec } from 'child_process';
 import { promisify } from 'util';
 import prisma from '@/lib/db';
+import { setInitializationCookie } from '@/app/actions';
 
 const execPromise = promisify(exec);
 
-export async function GET(request: NextRequest) {
+// Fixed: Removed unused request parameter
+export async function GET() {
   try {
     const dbPath = path.resolve(process.cwd(), 'prisma/dev.db');
     
@@ -39,6 +41,9 @@ export async function GET(request: NextRequest) {
     // Verify database connection
     await prisma.$connect();
     console.log('Database connection verified');
+    
+    // Set the initialization cookie
+    await setInitializationCookie();
     
     return NextResponse.json({
       success: true,

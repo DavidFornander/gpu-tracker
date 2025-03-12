@@ -15,7 +15,8 @@ export const metadata: Metadata = {
 // This function runs on the server
 async function initDatabase() {
   try {
-    const cookieStore = cookies();
+    // Fix: await cookies() before using get()
+    const cookieStore = await cookies();
     const dbInitialized = cookieStore.get('db-initialized');
     
     // Only initialize once per session
@@ -29,8 +30,7 @@ async function initDatabase() {
       
       if (response.ok) {
         console.log('Database initialized successfully');
-        // Set cookie to avoid repeated initialization
-        cookies().set('db-initialized', 'true', { maxAge: 3600 });
+        // Remove cookie setting here - cookies can only be modified in a Server Action or Route Handler
       } else {
         console.error('Failed to initialize database');
       }

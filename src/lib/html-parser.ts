@@ -202,6 +202,7 @@ export function extractVisibleText(html: string): string {
   let text = '';
   
   // Process all text nodes - Use proper type handling
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const processNode = (_: number, elem: any) => {
     // Type checking inside the function instead of in the parameter
     if (elem && elem.type === 'text') {
@@ -312,11 +313,6 @@ export async function parseHtmlSnippet(
         const $this = $(this);
         return $this.find('.price, img, [class*="product"]').length > 0;
       }).toArray();
-      
-      // If we found products at the parent level, log the better selector for future use
-      if (productElements.length > 0) {
-        console.log(`\n💡 [TIP] Better selector might be: "${parentContainer.prop('tagName').toLowerCase()}${parentContainer.attr('class') ? '.' + parentContainer.attr('class').replace(/\s+/g, '.') : ''} > div"`);
-      }
     }
 
     const rawDivs = productElements.map(element => $(element).html() || "");
@@ -342,7 +338,7 @@ export async function parseHtmlSnippet(
     // Process each product element
     for (const element of productElements) {
       try {
-        const htmlFragment = $(element).html() || "";
+        const htmlFragment = $(element).html() ?? "";
         
         // QUALITY CHECK: Skip if the fragment is too small to be a complete product
         if (htmlFragment.length < 100) {

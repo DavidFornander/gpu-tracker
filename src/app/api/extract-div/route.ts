@@ -1,7 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { parseHtmlSnippet } from '@/lib/html-parser';
 import { scrapeUrl } from '@/lib/url-scraper';
-import { createProduct } from '@/lib/db-service'; // Import database service
+import { createProduct } from '@/lib/db-service'; 
+import { checkProductNotifications } from '@/lib/notification-service';
 
 // Update input interface: html is optional, and add divSelector
 interface ExtractDivRequest {
@@ -48,21 +49,30 @@ export async function POST(request: NextRequest) {
       result = await scrapeUrl(sourceUrl, autoSelectors, retailer);
     }
     
-    // Store products in the database
+    // Store products in the database and check for notifications
     const savedProducts = [];
+    const notifiedProducts = [];
+    
     if (result.products.length > 0) {
-      // Save each product to the database
+      // Process each product: check notification rules and save to database
       for (const product of result.products) {
         try {
+          // Check product against notification rules BEFORE saving
+          const notificationSent = await checkProductNotifications(product);
+          if (notificationSent) {
+            notifiedProducts.push(product.id);
+          }
+          
+          // Save to database
           const savedProduct = await createProduct(product);
           savedProducts.push(savedProduct);
         } catch (dbError) {
-          console.error('Error saving product to database:', dbError);
-          // Continue with other products even if one fails
+          console.error('Error processing product:', dbError);
         }
       }
       
       console.log(`Saved ${savedProducts.length} of ${result.products.length} products to database`);
+      console.log(`Sent notifications for ${notifiedProducts.length} products`);
     }
     
     if (result.products.length === 0) {
@@ -76,6 +86,7 @@ export async function POST(request: NextRequest) {
       message: `Successfully parsed and saved ${savedProducts.length} products`,
       products: result.products,
       savedToDb: savedProducts.length,
+      notificationsSent: notifiedProducts.length,
       warnings: result.errors,
       // Use a type guard to return rawDivs if available, otherwise an empty array
       rawDivData: 'rawDivs' in result ? result.rawDivs : [],

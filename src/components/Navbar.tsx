@@ -20,6 +20,9 @@ export default function Navbar() {
                 <Link href="/scrape/schedule" className="text-gray-300 hover:bg-gray-700 hover:text-white px-3 py-2 rounded-md">
                   Scheduled Scrapes
                 </Link>
+                <Link href="/notifications" className="text-gray-300 hover:bg-gray-700 hover:text-white px-3 py-2 rounded-md">
+                  Notifications
+                </Link>
                 <Link href="/settings" className="text-gray-300 hover:bg-gray-700 hover:text-white px-3 py-2 rounded-md">
                   Settings
                 </Link>
