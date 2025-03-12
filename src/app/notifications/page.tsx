@@ -4,13 +4,6 @@ import { useState, useEffect, FormEvent } from 'react';
 import Link from 'next/link';
 import { NotificationRule, NotificationConditions } from '@/types';
 
-// Define a specific type for the form's conditions value
-type FormConditionValue = {
-  name: string;
-  conditions: NotificationConditions;
-  isActive: boolean;
-};
-
 export default function NotificationsPage() {
   const [rules, setRules] = useState<NotificationRule[]>([]);
   const [isLoading, setIsLoading] = useState(false);
@@ -201,7 +194,7 @@ export default function NotificationsPage() {
   };
 
   // Fix the any type by using a proper type
-  const handleInputChange = (field: string, value: string | number | boolean) => {
+  const handleInputChange = (field: string, value: string | number | boolean | undefined) => {
     setFormData(prev => {
       if (field.startsWith('conditions.')) {
         const conditionField = field.split('.')[1];
@@ -445,21 +438,47 @@ export default function NotificationsPage() {
                     </td>
                     <td className="px-4 py-4">
                       <div className="text-sm text-gray-900 space-y-1">
-                        {rule.conditions.brandMatches?.length > 0 && (
-                          <p><span className="font-medium">Brand:</span> {rule.conditions.brandMatches?.join(', ')}</p>
-                        )}
-                        {rule.conditions.modelContains?.length > 0 && (
-                          <p><span className="font-medium">Model contains:</span> {rule.conditions.modelContains?.join(', ')}</p>
-                        )}
+                        {(() => {
+                          // Extract and type-safe check brandMatches
+                          const brandMatches = rule.conditions.brandMatches;
+                          if (brandMatches && brandMatches.length > 0) {
+                            return (
+                              <p><span className="font-medium">Brand:</span> {brandMatches.join(', ')}</p>
+                            );
+                          }
+                          return null;
+                        })()}
+
+                        {(() => {
+                          // Extract and type-safe check modelContains
+                          const modelContains = rule.conditions.modelContains;
+                          if (modelContains && modelContains.length > 0) {
+                            return (
+                              <p><span className="font-medium">Model contains:</span> {modelContains.join(', ')}</p>
+                            );
+                          }
+                          return null;
+                        })()}
+                        
                         {rule.conditions.minPrice !== undefined && (
                           <p><span className="font-medium">Min price:</span> {rule.conditions.minPrice}</p>
                         )}
+                        
                         {rule.conditions.maxPrice !== undefined && (
                           <p><span className="font-medium">Max price:</span> {rule.conditions.maxPrice}</p>
                         )}
-                        {rule.conditions.retailerIs?.length > 0 && (
-                          <p><span className="font-medium">Retailer:</span> {rule.conditions.retailerIs?.join(', ')}</p>
-                        )}
+                        
+                        {(() => {
+                          // Extract and type-safe check retailerIs
+                          const retailerIs = rule.conditions.retailerIs;
+                          if (retailerIs && retailerIs.length > 0) {
+                            return (
+                              <p><span className="font-medium">Retailer:</span> {retailerIs.join(', ')}</p>
+                            );
+                          }
+                          return null;
+                        })()}
+                        
                         {rule.conditions.mustBeInStock && (
                           <p><span className="font-medium">Stock:</span> Must be in stock</p>
                         )}
