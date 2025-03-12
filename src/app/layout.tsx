@@ -3,6 +3,7 @@ import type { Metadata } from 'next';
 import { Inter } from 'next/font/google';
 import Navbar from '@/components/Navbar';
 import CountdownManager from '@/components/CountdownManager';
+import { cookies } from 'next/headers';
 
 const inter = Inter({ subsets: ['latin'] });
 
@@ -11,18 +12,47 @@ export const metadata: Metadata = {
   description: 'Track GPU prices and availability across multiple retailers',
 };
 
-export default function RootLayout({
+// This function runs on the server
+async function initDatabase() {
+  try {
+    const cookieStore = cookies();
+    const dbInitialized = cookieStore.get('db-initialized');
+    
+    // Only initialize once per session
+    if (!dbInitialized) {
+      // Use relative URL to ensure it works in all environments
+      const url = '/api/init-db';
+      const response = await fetch(new URL(url, process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000'), { 
+        method: 'GET',
+        cache: 'no-store'  // Don't cache this response
+      });
+      
+      if (response.ok) {
+        console.log('Database initialized successfully');
+        // Set cookie to avoid repeated initialization
+        cookies().set('db-initialized', 'true', { maxAge: 3600 });
+      } else {
+        console.error('Failed to initialize database');
+      }
+    }
+  } catch (error) {
+    console.error('Error initializing database:', error);
+  }
+}
+
+export default async function RootLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
+  // Initialize database when the app starts
+  await initDatabase();
+  
   return (
     <html lang="en">
       <body className={inter.className}>
         <Navbar />
-        {/* Make container full width with max constraint and better padding */}
         <main className="w-full max-w-[1920px] mx-auto px-5 md:px-8 lg:px-12 py-8">
-          {/* Add the background countdown manager */}
           <CountdownManager />
           {children}
         </main>

@@ -1,24 +1,13 @@
 import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
-import { initializeDatabase } from './lib/db-init';
 
-let isInitialized = false;
-
-export async function middleware(request: NextRequest) {
-  // Only run the initialization once
-  if (!isInitialized && typeof window === 'undefined') {
-    isInitialized = true;
-    try {
-      await initializeDatabase();
-    } catch (error) {
-      console.error('Database initialization failed in middleware:', error);
-    }
-  }
-  
+// Simple middleware that doesn't use Node.js specific modules or import any server components
+export function middleware(request: NextRequest) {
+  // Just pass through the request without any database operations
   return NextResponse.next();
 }
 
-// See: https://nextjs.org/docs/app/building-your-application/routing/middleware#matcher
+// Limit middleware execution to specific paths
 export const config = {
   matcher: ['/((?!api|_next/static|_next/image|favicon.ico).*)'],
 };
